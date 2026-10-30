@@ -1,0 +1,535 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>विद्यार्थी प्रबंधन प्रणाली</title>
+
+<style>
+:root {
+  --bg:#f4f6fb;
+  --card:#ffffff;
+  --text:#202b40;
+  --muted:#788399;
+  --primary:#4f46e5;
+  --border:#e7eaf1;
+  --green:#16a36a;
+  --red:#e34d59;
+}
+body.dark {
+  --bg:#111827;
+  --card:#1f2937;
+  --text:#f3f4f6;
+  --muted:#aab4c5;
+  --border:#374151;
+  --primary:#818cf8;
+}
+* {box-sizing:border-box;margin:0;padding:0}
+body {
+  font-family:Arial,"Noto Sans Devanagari",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+}
+.app {display:flex;min-height:100vh}
+.sidebar {
+  width:245px;background:var(--card);
+  border-right:1px solid var(--border);
+  padding:25px 15px;flex-shrink:0;
+}
+.logo {font-size:20px;font-weight:bold;color:var(--primary);padding:5px 10px 30px}
+.logo span {color:var(--text)}
+.nav-title {font-size:11px;color:var(--muted);padding:10px}
+.nav-btn {
+  width:100%;border:0;background:transparent;color:var(--muted);
+  text-align:left;padding:13px 12px;border-radius:9px;
+  cursor:pointer;font-size:14px;margin:3px 0;
+}
+.nav-btn:hover,.nav-btn.active {background:#eeeeff;color:var(--primary)}
+.dark .nav-btn:hover,.dark .nav-btn.active {background:#30345a}
+.main {flex:1;min-width:0;padding:25px 30px}
+.topbar {display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:25px}
+h1 {font-size:24px}
+.subtitle {color:var(--muted);font-size:13px;margin-top:6px}
+.actions {display:flex;gap:8px;align-items:center}
+button {cursor:pointer;font-family:inherit}
+.btn {
+  border:0;padding:10px 15px;border-radius:8px;
+  background:var(--primary);color:white;font-size:13px;
+}
+.btn.secondary {background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn.danger {background:var(--red)}
+.btn.success {background:var(--green)}
+.stats {display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:22px}
+.card {background:var(--card);border:1px solid var(--border);border-radius:13px;padding:20px}
+.stat-label {font-size:13px;color:var(--muted)}
+.stat-number {font-size:28px;font-weight:bold;margin-top:12px}
+.stat-icon {font-size:22px;margin-bottom:10px}
+.panel {background:var(--card);border:1px solid var(--border);border-radius:13px;padding:20px;margin-bottom:20px}
+.panel-head {display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:17px}
+.panel h2 {font-size:17px}
+.section {display:none}
+.section.active {display:block}
+input,select {
+  padding:11px;border:1px solid var(--border);
+  border-radius:8px;background:var(--bg);color:var(--text);
+  width:100%;outline:none;font-size:13px;
+}
+input:focus,select:focus {border-color:var(--primary)}
+.form-grid {display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.field label {display:block;font-size:13px;margin-bottom:7px;color:var(--muted)}
+.form-buttons {display:flex;gap:10px;margin-top:18px}
+.table-wrap {overflow-x:auto}
+table {width:100%;border-collapse:collapse;min-width:650px}
+th,td {padding:13px 10px;text-align:left;border-bottom:1px solid var(--border);font-size:13px}
+th {color:var(--muted);font-weight:600}
+.tag {padding:5px 9px;border-radius:20px;font-size:11px;background:#e8f8ef;color:#168653}
+.tag.absent {background:#ffeded;color:#d44343}
+.tag.neutral {background:#eeeeff;color:var(--primary)}
+.small-btn {border:0;background:transparent;color:var(--primary);padding:5px;font-size:12px}
+.small-btn.delete {color:var(--red)}
+.toolbar {display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}
+.toolbar input {max-width:300px}
+.toolbar select {max-width:180px}
+.empty {text-align:center;color:var(--muted);padding:30px}
+.modal {
+  position:fixed;inset:0;background:#0008;display:none;
+  justify-content:center;align-items:center;padding:15px;z-index:5;
+}
+.modal.show {display:flex}
+.modal-box {
+  background:var(--card);padding:24px;border-radius:15px;
+  width:min(550px,100%);max-height:90vh;overflow:auto;
+}
+.modal-head {display:flex;justify-content:space-between;margin-bottom:20px}
+.close {border:0;background:transparent;color:var(--text);font-size:23px}
+.notice {font-size:12px;color:var(--muted);margin-top:12px}
+.progress {height:8px;background:var(--border);border-radius:10px;overflow:hidden}
+.progress div {height:100%;background:var(--green)}
+.footer {text-align:center;color:var(--muted);font-size:12px;padding:15px}
+@media(max-width:900px) {
+  .sidebar {width:190px}
+  .stats {grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:650px) {
+  .app {display:block}
+  .sidebar {width:100%;padding:12px;display:flex;overflow-x:auto;gap:5px}
+  .logo,.nav-title {display:none}
+  .nav-btn {width:auto;white-space:nowrap;padding:10px}
+  .main {padding:16px}
+  .topbar {align-items:flex-start;flex-direction:column}
+  .stats {grid-template-columns:repeat(2,1fr);gap:9px}
+  .card {padding:13px}
+  .stat-number {font-size:23px}
+  .form-grid {grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<aside class="sidebar">
+  <div class="logo">🎓 विद्यार्थी<span> पोर्टल</span></div>
+  <div class="nav-title">मुख्य मेनू</div>
+  <button class="nav-btn active" data-page="dashboard">▦ डैशबोर्ड</button>
+  <button class="nav-btn" data-page="students">♙ विद्यार्थी सूची</button>
+  <button class="nav-btn" data-page="attendance">✓ उपस्थिति</button>
+  <button class="nav-btn" data-page="marks">▤ अंक और परिणाम</button>
+  <button class="nav-btn" data-page="reports">▥ रिपोर्ट</button>
+</aside>
+
+<main class="main">
+
+<header class="topbar">
+  <div>
+    <h1 id="pageTitle">डैशबोर्ड</h1>
+    <p class="subtitle">आपकी स्कूल प्रबंधन प्रणाली में स्वागत है।</p>
+  </div>
+  <div class="actions">
+    <button class="btn secondary" onclick="toggleTheme()">🌙 थीम</button>
+    <button class="btn" onclick="openStudent()">+ विद्यार्थी जोड़ें</button>
+  </div>
+</header>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="section active">
+  <div class="stats">
+    <div class="card"><div class="stat-icon">👨‍🎓</div><div class="stat-label">कुल विद्यार्थी</div><div class="stat-number" id="totalStudents">0</div></div>
+    <div class="card"><div class="stat-icon">✓</div><div class="stat-label">आज उपस्थित</div><div class="stat-number" id="presentCount">0</div></div>
+    <div class="card"><div class="stat-icon">✕</div><div class="stat-label">आज अनुपस्थित</div><div class="stat-number" id="absentCount">0</div></div>
+    <div class="card"><div class="stat-icon">🏫</div><div class="stat-label">कुल कक्षाएँ</div><div class="stat-number" id="totalClasses">0</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>हाल ही में जोड़े गए विद्यार्थी</h2>
+      <button class="small-btn" onclick="showPage('students')">सभी देखें →</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>रोल नंबर</th><th>नाम</th><th>कक्षा</th><th>मोबाइल</th></tr></thead>
+        <tbody id="recentStudents"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- STUDENTS -->
+<section id="students" class="section">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>विद्यार्थियों की सूची</h2>
+      <button class="btn" onclick="openStudent()">+ नया विद्यार्थी</button>
+    </div>
+    <div class="toolbar">
+      <input id="studentSearch" placeholder="नाम या रोल नंबर खोजें..." oninput="renderStudents()">
+      <select id="classFilter" onchange="renderStudents()">
+        <option value="">सभी कक्षाएँ</option>
+      </select>
+      <button class="btn secondary" onclick="exportCSV('students')">⬇ CSV डाउनलोड</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>रोल नंबर</th><th>नाम</th><th>कक्षा</th><th>मोबाइल</th><th>ईमेल</th><th>कार्य</th></tr></thead>
+        <tbody id="studentTable"></tbody>
+      </table>
+    </div>
+    <div id="studentEmpty" class="empty" style="display:none">अभी कोई विद्यार्थी नहीं है। नया विद्यार्थी जोड़ें।</div>
+  </div>
+</section>
+
+<!-- ATTENDANCE -->
+<section id="attendance" class="section">
+  <div class="panel">
+    <div class="panel-head"><h2>उपस्थिति प्रबंधन</h2></div>
+    <div class="toolbar">
+      <input type="date" id="attendanceDate">
+      <select id="attendanceClass" onchange="renderAttendance()"><option value="">सभी कक्षाएँ</option></select>
+      <button class="btn success" onclick="saveAttendance()">उपस्थिति सेव करें</button>
+    </div>
+    <p class="notice">हर विद्यार्थी के सामने उपस्थित या अनुपस्थित चुनें।</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>रोल नंबर</th><th>विद्यार्थी का नाम</th><th>कक्षा</th><th>उपस्थिति</th></tr></thead>
+        <tbody id="attendanceTable"></tbody>
+      </table>
+    </div>
+    <div id="attendanceEmpty" class="empty" style="display:none">पहले विद्यार्थी जोड़ें।</div>
+  </div>
+</section>
+
+<!-- MARKS -->
+<section id="marks" class="section">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>अंक और परीक्षा परिणाम</h2>
+      <button class="btn" onclick="openMarks()">+ अंक जोड़ें</button>
+    </div>
+    <div class="toolbar">
+      <input id="marksSearch" placeholder="विद्यार्थी खोजें..." oninput="renderMarks()">
+      <button class="btn secondary" onclick="exportCSV('marks')">⬇ CSV डाउनलोड</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>रोल नंबर</th><th>नाम</th><th>विषय</th><th>प्राप्त अंक</th><th>कुल अंक</th><th>प्रतिशत</th><th>ग्रेड</th><th>कार्य</th></tr></thead>
+        <tbody id="marksTable"></tbody>
+      </table>
+    </div>
+    <div id="marksEmpty" class="empty" style="display:none">अभी कोई अंक दर्ज नहीं है।</div>
+  </div>
+</section>
+
+<!-- REPORTS -->
+<section id="reports" class="section">
+  <div class="stats">
+    <div class="card"><div class="stat-label">कुल विद्यार्थी</div><div class="stat-number" id="reportTotal">0</div></div>
+    <div class="card"><div class="stat-label">कुल अंक रिकॉर्ड</div><div class="stat-number" id="reportMarks">0</div></div>
+  </div>
+  <div class="panel">
+    <h2 style="margin-bottom:15px">उपस्थिति रिपोर्ट</h2>
+    <div class="toolbar"><input type="date" id="reportDate"><button class="btn" onclick="renderReports()">रिपोर्ट देखें</button></div>
+    <div id="attendanceReport" class="empty">रिपोर्ट देखने के लिए तारीख चुनें।</div>
+    <button class="btn secondary" onclick="exportCSV('attendance')">⬇ उपस्थिति CSV डाउनलोड</button>
+  </div>
+  <div class="panel">
+    <h2 style="margin-bottom:15px">डेटा बैकअप</h2>
+    <p class="notice">अपने रिकॉर्ड की JSON बैकअप फाइल डाउनलोड करें। जरूरत पड़ने पर इसे वापस लोड भी कर सकते हैं।</p>
+    <div class="form-buttons">
+      <button class="btn" onclick="backupData()">बैकअप डाउनलोड</button>
+      <button class="btn secondary" onclick="document.getElementById('restoreFile').click()">बैकअप वापस लोड करें</button>
+      <input type="file" id="restoreFile" accept=".json" hidden onchange="restoreData(event)">
+    </div>
+  </div>
+</section>
+
+<div class="footer">विद्यार्थी पोर्टल © 2026 | शिक्षा ही शक्ति है</div>
+</main>
+</div>
+
+<!-- STUDENT MODAL -->
+<div class="modal" id="studentModal">
+<div class="modal-box">
+  <div class="modal-head"><h2 id="studentModalTitle">नया विद्यार्थी जोड़ें</h2><button class="close" onclick="closeModal('studentModal')">×</button></div>
+  <form id="studentForm">
+    <input type="hidden" id="editId">
+    <div class="form-grid">
+      <div class="field"><label>रोल नंबर *</label><input id="roll" required></div>
+      <div class="field"><label>विद्यार्थी का नाम *</label><input id="name" required></div>
+      <div class="field"><label>कक्षा *</label><input id="className" required placeholder="जैसे 10वीं"></div>
+      <div class="field"><label>मोबाइल नंबर</label><input id="phone" type="tel" maxlength="10" pattern="[0-9]{10}"></div>
+      <div class="field"><label>ईमेल</label><input id="email" type="email"></div>
+      <div class="field"><label>जन्म तारीख</label><input id="dob" type="date"></div>
+      <div class="field"><label>पता</label><input id="address"></div>
+      <div class="field"><label>लिंग</label><select id="gender"><option value="">चुनें</option><option>लड़का</option><option>लड़की</option><option>अन्य</option></select></div>
+    </div>
+    <div class="form-buttons"><button class="btn" type="submit">सेव करें</button><button class="btn secondary" type="button" onclick="closeModal('studentModal')">रद्द करें</button></div>
+  </form>
+</div>
+</div>
+
+<!-- MARKS MODAL -->
+<div class="modal" id="marksModal">
+<div class="modal-box">
+  <div class="modal-head"><h2>अंक दर्ज करें</h2><button class="close" onclick="closeModal('marksModal')">×</button></div>
+  <form id="marksForm">
+    <div class="field"><label>विद्यार्थी *</label><select id="markStudent" required></select></div><br>
+    <div class="field"><label>विषय *</label><input id="subject" required placeholder="जैसे गणित"></div><br>
+    <div class="form-grid">
+      <div class="field"><label>प्राप्त अंक *</label><input id="obtained" type="number" min="0" required></div>
+      <div class="field"><label>कुल अंक *</label><input id="maximum" type="number" min="1" required></div>
+    </div>
+    <div class="form-buttons"><button class="btn">अंक सेव करें</button></div>
+  </form>
+</div>
+</div>
+
+<script>
+// डेटा
+let students = JSON.parse(localStorage.getItem("students") || "[]");
+let attendance = JSON.parse(localStorage.getItem("attendance") || "{}");
+let marks = JSON.parse(localStorage.getItem("marks") || "[]");
+
+const today = () => new Date().toLocaleDateString("en-CA");
+document.getElementById("attendanceDate").value = today();
+document.getElementById("reportDate").value = today();
+
+function saveData() {
+  localStorage.setItem("students",JSON.stringify(students));
+  localStorage.setItem("attendance",JSON.stringify(attendance));
+  localStorage.setItem("marks",JSON.stringify(marks));
+}
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+function showPage(page) {
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(page).classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+  const titles={dashboard:"डैशबोर्ड",students:"विद्यार्थी सूची",attendance:"उपस्थिति प्रबंधन",marks:"अंक और परिणाम",reports:"रिपोर्ट"};
+  document.getElementById("pageTitle").textContent=titles[page];
+  renderAll();
+}
+document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
+
+function openStudent(id=null) {
+  document.getElementById("studentForm").reset();
+  document.getElementById("editId").value=id || "";
+  document.getElementById("studentModalTitle").textContent=id?"विद्यार्थी अपडेट करें":"नया विद्यार्थी जोड़ें";
+  if(id) {
+    const s=students.find(x=>x.id===id);
+    if(!s)return;
+    ["roll","name","className","phone","email","dob","address","gender"].forEach(k=>document.getElementById(k).value=s[k]||"");
+  }
+  document.getElementById("studentModal").classList.add("show");
+}
+function closeModal(id) {document.getElementById(id).classList.remove("show");}
+
+document.getElementById("studentForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const id=document.getElementById("editId").value;
+  const data={};
+  ["roll","name","className","phone","email","dob","address","gender"].forEach(k=>data[k]=document.getElementById(k).value.trim());
+  if(students.some(s=>s.roll.toLowerCase()===data.roll.toLowerCase() && s.id!==id)){
+    alert("यह रोल नंबर पहले से मौजूद है।");return;
+  }
+  if(id) students=students.map(s=>s.id===id?{...s,...data}:s);
+  else students.push({id:crypto.randomUUID(),...data,created:Date.now()});
+  saveData();closeModal("studentModal");renderAll();
+});
+
+function deleteStudent(id) {
+  if(!confirm("क्या आप इस विद्यार्थी को हटाना चाहते हैं?"))return;
+  students=students.filter(s=>s.id!==id);
+  marks=marks.filter(m=>m.studentId!==id);
+  Object.keys(attendance).forEach(date=>delete attendance[date][id]);
+  saveData();renderAll();
+}
+function classOptions() {
+  const classes=[...new Set(students.map(s=>s.className).filter(Boolean))].sort();
+  ["classFilter","attendanceClass"].forEach(id=>{
+    const el=document.getElementById(id),old=el.value;
+    el.innerHTML='<option value="">सभी कक्षाएँ</option>'+classes.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+    el.value=classes.includes(old)?old:"";
+  });
+}
+function renderStudents() {
+  const q=document.getElementById("studentSearch").value.toLowerCase();
+  const c=document.getElementById("classFilter").value;
+  const list=students.filter(s=>(s.name+" "+s.roll).toLowerCase().includes(q)&&(!c||s.className===c));
+  document.getElementById("studentTable").innerHTML=list.map(s=>`
+    <tr><td>${esc(s.roll)}</td><td>${esc(s.name)}</td><td>${esc(s.className)}</td>
+    <td>${esc(s.phone||"-")}</td><td>${esc(s.email||"-")}</td>
+    <td><button class="small-btn" onclick="openStudent('${s.id}')">एडिट</button>
+    <button class="small-btn delete" onclick="deleteStudent('${s.id}')">हटाएँ</button></td></tr>`).join("");
+  document.getElementById("studentEmpty").style.display=list.length?"none":"block";
+}
+function renderDashboard() {
+  const date=today(),daily=attendance[date]||{};
+  const values=Object.values(daily);
+  document.getElementById("totalStudents").textContent=students.length;
+  document.getElementById("presentCount").textContent=values.filter(v=>v==="present").length;
+  document.getElementById("absentCount").textContent=values.filter(v=>v==="absent").length;
+  document.getElementById("totalClasses").textContent=new Set(students.map(s=>s.className)).size;
+  document.getElementById("recentStudents").innerHTML=students.slice(-5).reverse().map(s=>`
+    <tr><td>${esc(s.roll)}</td><td>${esc(s.name)}</td><td>${esc(s.className)}</td><td>${esc(s.phone||"-")}</td></tr>`).join("");
+}
+function renderAttendance() {
+  const date=document.getElementById("attendanceDate").value;
+  const cls=document.getElementById("attendanceClass").value;
+  const list=students.filter(s=>!cls||s.className===cls);
+  const daily=attendance[date]||{};
+  document.getElementById("attendanceTable").innerHTML=list.map(s=>`
+    <tr><td>${esc(s.roll)}</td><td>${esc(s.name)}</td><td>${esc(s.className)}</td>
+    <td><select data-attendance="${s.id}">
+      <option value="present" ${daily[s.id]==="present"?"selected":""}>उपस्थित</option>
+      <option value="absent" ${daily[s.id]==="absent"?"selected":""}>अनुपस्थित</option>
+    </select></td></tr>`).join("");
+  document.getElementById("attendanceEmpty").style.display=list.length?"none":"block";
+}
+function saveAttendance() {
+  const date=document.getElementById("attendanceDate").value;
+  if(!date){alert("तारीख चुनें।");return;}
+  attendance[date]=attendance[date]||{};
+  document.querySelectorAll("[data-attendance]").forEach(el=>attendance[date][el.dataset.attendance]=el.value);
+  saveData();renderAll();alert("उपस्थिति सफलतापूर्वक सेव हो गई!");
+}
+document.getElementById("attendanceDate").addEventListener("change",renderAttendance);
+
+function openMarks() {
+  if(!students.length){alert("पहले विद्यार्थी जोड़ें।");return;}
+  document.getElementById("marksForm").reset();
+  document.getElementById("markStudent").innerHTML=students.map(s=>`<option value="${s.id}">${esc(s.roll)} - ${esc(s.name)}</option>`).join("");
+  document.getElementById("marksModal").classList.add("show");
+}
+document.getElementById("marksForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const obtained=Number(document.getElementById("obtained").value);
+  const maximum=Number(document.getElementById("maximum").value);
+  if(maximum<=0||obtained<0||obtained>maximum){alert("अंक सही दर्ज करें।");return;}
+  marks.push({
+    id:crypto.randomUUID(),
+    studentId:document.getElementById("markStudent").value,
+    subject:document.getElementById("subject").value.trim(),
+    obtained,maximum
+  });
+  saveData();closeModal("marksModal");renderAll();
+});
+function grade(p) {return p>=90?"A+":p>=80?"A":p>=70?"B":p>=60?"C":p>=40?"D":"F";}
+function renderMarks() {
+  const q=document.getElementById("marksSearch").value.toLowerCase();
+  const list=marks.filter(m=>{
+    const s=students.find(x=>x.id===m.studentId);
+    return s&&(s.name+" "+s.roll).toLowerCase().includes(q);
+  });
+  document.getElementById("marksTable").innerHTML=list.map(m=>{
+    const s=students.find(x=>x.id===m.studentId);
+    const p=(m.obtained/m.maximum*100);
+    return `<tr><td>${esc(s.roll)}</td><td>${esc(s.name)}</td><td>${esc(m.subject)}</td>
+    <td>${m.obtained}</td><td>${m.maximum}</td><td>${p.toFixed(1)}%</td><td><span class="tag neutral">${grade(p)}</span></td>
+    <td><button class="small-btn delete" onclick="deleteMark('${m.id}')">हटाएँ</button></td></tr>`;
+  }).join("");
+  document.getElementById("marksEmpty").style.display=list.length?"none":"block";
+}
+function deleteMark(id) {
+  if(!confirm("यह अंक रिकॉर्ड हटाएँ?"))return;
+  marks=marks.filter(m=>m.id!==id);saveData();renderAll();
+}
+function renderReports() {
+  const date=document.getElementById("reportDate").value;
+  const daily=attendance[date]||{};
+  const present=Object.values(daily).filter(x=>x==="present").length;
+  const absent=Object.values(daily).filter(x=>x==="absent").length;
+  const total=present+absent;
+  document.getElementById("attendanceReport").innerHTML=
+    `<h3>तारीख: ${esc(date)}</h3><br>
+    कुल दर्ज उपस्थिति: ${total}<br><br>
+    उपस्थित: <b>${present}</b><br>
+    अनुपस्थित: <b>${absent}</b><br><br>
+    उपस्थिति प्रतिशत: <b>${total?(present/total*100).toFixed(1):0}%</b>`;
+  document.getElementById("reportTotal").textContent=students.length;
+  document.getElementById("reportMarks").textContent=marks.length;
+}
+function exportCSV(type) {
+  let rows=[];
+  if(type==="students"){
+    rows=[["रोल नंबर","नाम","कक्षा","मोबाइल","ईमेल"],...students.map(s=>[s.roll,s.name,s.className,s.phone,s.email])];
+  } else if(type==="marks"){
+    rows=[["रोल नंबर","नाम","विषय","प्राप्त अंक","कुल अंक","प्रतिशत","ग्रेड"],...marks.map(m=>{
+      const s=students.find(x=>x.id===m.studentId);if(!s)return null;
+      const p=m.obtained/m.maximum*100;
+      return [s.roll,s.name,m.subject,m.obtained,m.maximum,p.toFixed(1)+"%",grade(p)];
+    }).filter(Boolean)];
+  } else {
+    rows=[["तारीख","रोल नंबर","नाम","कक्षा","उपस्थिति"]];
+    Object.entries(attendance).forEach(([date,records])=>{
+      students.forEach(s=>{if(records[s.id])rows.push([date,s.roll,s.name,s.className,records[s.id]==="present"?"उपस्थित":"अनुपस्थित"]);});
+    });
+  }
+  const csv="\uFEFF"+rows.map(r=>r.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download=type+"_report.csv";a.click();URL.revokeObjectURL(a.href);
+}
+function backupData() {
+  const data={students,attendance,marks};
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));
+  a.download="school_backup.json";a.click();URL.revokeObjectURL(a.href);
+}
+function restoreData(e) {
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const d=JSON.parse(reader.result);
+      if(!Array.isArray(d.students)||!Array.isArray(d.marks)||!d.attendance||typeof d.attendance!=="object")throw Error();
+      if(!confirm("मौजूदा डेटा की जगह बैकअप डेटा लोड करें?"))return;
+      students=d.students;attendance=d.attendance;marks=d.marks;
+      saveData();renderAll();alert("बैकअप सफलतापूर्वक लोड हो गया!");
+    }catch{alert("यह सही बैकअप फाइल नहीं है।");}
+    e.target.value="";
+  };
+  reader.readAsText(file);
+}
+function toggleTheme() {
+  document.body.classList.toggle("dark");
+  localStorage.setItem("theme",document.body.classList.contains("dark")?"dark":"light");
+}
+if(localStorage.getItem("theme")==="dark")document.body.classList.add("dark");
+
+function renderAll() {
+  classOptions();
+  renderDashboard();
+  renderStudents();
+  renderAttendance();
+  renderMarks();
+  renderReports();
+}
+renderAll();
+</script>
+</body>
+</html>
